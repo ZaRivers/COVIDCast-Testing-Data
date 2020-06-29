@@ -62,14 +62,14 @@ def JHUDataFetch():
         new_row = {'FIPS': d0['FIPS'], 'County_Name': d0['Admin2'], 'Combined_Key': d0['Combined_Key'], 'Confirmed': d0['Confirmed'], 'Date': d0['Date'], 'Deaths': d0['Deaths'], 'State': d0['Province_State'], 'Month_Case_Progression': dr['Day_Cases'].values, 'Lat': d0['Lat'], 'Lng': d0['Long_']}
         COVID_df = COVID_df.append(new_row, ignore_index=True)
         
-    COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
+    #COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
 
 # MIT 2016 county election data
 
 def presElectionDataFetch():
     
     global COVID_df
-    COVID_df = pd.read_csv('./COVID_df.csv')
+    #COVID_df = pd.read_csv('./COVID_df.csv')
     
     data = pd.read_csv('./countypres_2000-2016.csv')
     presData_2016 = data.loc[data['year']==2016]
@@ -90,6 +90,15 @@ def presElectionDataFetch():
 
 # Current governer political party
 
+def govPoliticalPartyFetch():
+    
+    global COVID_df
+    COVID_df = pd.read_csv('./COVID_df.csv')
+    party_df = pd.read_csv('./party_df.csv')
+    party_data = party_df.set_index('State')['Party'].to_dict()
+    
+    COVID_df['Governer_Party'] = COVID_df['State'].map(party_data)
+
 # Population density
 
 # Income index
@@ -104,7 +113,11 @@ def presElectionDataFetch():
 
 # Weather
 
+#Trump PCT
+
 ##### DATA ACQUISITION CALLS #####
 
 #JHUDataFetch();
-presElectionDataFetch()
+#presElectionDataFetch()
+govPoliticalPartyFetch()
+COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
