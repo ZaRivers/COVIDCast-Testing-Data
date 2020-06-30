@@ -11,6 +11,8 @@ import sklearn
 import json
 import requests
 
+from state_abbreviations import us_state_abbrev
+
 ##### VARIABLE DECLARATIONS #####
 JHU_df = pd.DataFrame();
 COVID_df = pd.DataFrame(columns=['FIPS', 'County_Name', 'Combined_Key', 'Confirmed', 'Date', 'Deaths', 'State', 'Month_Case_Progression', '2016_E_Party', 'Governer_Party', 'Lat', 'Lng']);
@@ -62,7 +64,6 @@ def JHUDataFetch():
         new_row = {'FIPS': d0['FIPS'], 'County_Name': d0['Admin2'], 'Combined_Key': d0['Combined_Key'], 'Confirmed': d0['Confirmed'], 'Date': d0['Date'], 'Deaths': d0['Deaths'], 'State': d0['Province_State'], 'Month_Case_Progression': dr['Day_Cases'].values, 'Lat': d0['Lat'], 'Lng': d0['Long_']}
         COVID_df = COVID_df.append(new_row, ignore_index=True)
         
-    #COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
 
 # MIT 2016 county election data
 
@@ -113,11 +114,33 @@ def govPoliticalPartyFetch():
 
 # Weather
 
-#Trump PCT
+# Trump PCT
 
 ##### DATA ACQUISITION CALLS #####
 
 #JHUDataFetch();
 #presElectionDataFetch()
-govPoliticalPartyFetch()
-COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
+#govPoliticalPartyFetch()
+
+#CSV Formatting
+
+COVID_df = pd.read_csv('./COVID_df.csv')
+COVID_df['State_Abrev'] = COVID_df['State'].map(us_state_abbrev)
+COVID_df['Full_County'] = ""
+
+for i in COVID_df.index:
+    if type(COVID_df.iloc[i].County_Name) == str:
+        lower_county = COVID_df.iloc[i].County_Name.lower()
+        postal_lower = COVID_df.iloc[i]['State_Abrev'].lower()
+        lower_county = lower_county.split(' ')
+        lower_county.append('county')
+        lower_county.append(postal_lower)
+        cong_county = '-'.join(lower_county)
+        COVID_df.at[i, 'Full_County'] = cong_county
+    else:
+        print('The following county name threw an error: ' + str(COVID_df.iloc[i].County_Name))
+        
+counties_series = COVID_df['Full_County']
+counties_series.to_csv('counties_series.csv')
+    
+#COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
