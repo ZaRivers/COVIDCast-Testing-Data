@@ -21,14 +21,13 @@ class PartySpider(scrapy.Spider):
         
         counties = [x[1] for x in series.values]
         
-        #counties.remove(float('nan'))
-        
         urls= ['https://datausa.io/profile/geo/%s' % county for county in counties]
+        #urls= ['https://datausa.io/profile/geo/orange-county-nc']
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        census_df = pd.DataFrame()
+        #census_df = pd.DataFrame()
         statsbox = response.xpath(".//div[@class='profile-stats']")
         stat = statsbox.xpath(".//div[@class='Stat large-text']")
         
@@ -46,7 +45,7 @@ class PartySpider(scrapy.Spider):
             element[label] = value
             
         yield element
-        census_df.append(element)
+        #census_df.append(element, ignore_index=True)
         
             
 # Running with: scrapy crawl census -o all_counties_census.csv
