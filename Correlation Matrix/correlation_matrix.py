@@ -94,7 +94,7 @@ def presElectionDataFetch():
 def govPoliticalPartyFetch():
     
     global COVID_df
-    COVID_df = pd.read_csv('./COVID_df.csv')
+    #COVID_df = pd.read_csv('./COVID_df.csv')
     party_df = pd.read_csv('./party_df.csv')
     party_data = party_df.set_index('State')['Party'].to_dict()
     
@@ -104,10 +104,6 @@ def govPoliticalPartyFetch():
 
 # Income index
 
-# Race index
-
-# Age index
-
 # Education index
 
 # Geography of state
@@ -116,31 +112,53 @@ def govPoliticalPartyFetch():
 
 # Trump PCT
 
+##### DATA EXTRACTION #####
+
+def dataExtraction(fips):
+    global COVID_df
+    #COVID_df = pd.read_csv('./COVID_df.csv')
+    return_df = pd.DataFrame()
+    for i in fips:
+        return_df = return_df.append(COVID_df.loc[COVID_df['FIPS']==i])
+    return return_df
+
+##### CSV Formatting #####
+
+def CSVAbbreviationFormat():
+    #COVID_df = pd.read_csv('./COVID_df.csv')
+    COVID_df['State_Abrev'] = COVID_df['State'].map(us_state_abbrev)
+    COVID_df['Full_County'] = ""
+
+    for i in COVID_df.index:
+        if type(COVID_df.iloc[i].County_Name) == str:
+            lower_county = COVID_df.iloc[i].County_Name.lower()
+            postal_lower = COVID_df.iloc[i]['State_Abrev'].lower()
+            lower_county = lower_county.split(' ')
+            lower_county.append('county')
+            lower_county.append(postal_lower)
+            cong_county = '-'.join(lower_county)
+            COVID_df.at[i, 'Full_County'] = cong_county
+        else:
+            print('The following county name threw an error: ' + str(COVID_df.iloc[i].County_Name))
+
+    counties_series = COVID_df['Full_County']
+    counties_series.to_csv('counties_series.csv')
+        
+
 ##### DATA ACQUISITION CALLS #####
 
-#JHUDataFetch();
-#presElectionDataFetch()
-#govPoliticalPartyFetch()
+JHUDataFetch()
+presElectionDataFetch()
+govPoliticalPartyFetch()
 
-#CSV Formatting
+COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
 
-COVID_df = pd.read_csv('./COVID_df.csv')
-COVID_df['State_Abrev'] = COVID_df['State'].map(us_state_abbrev)
-COVID_df['Full_County'] = ""
+CSVAbbreviationFormat() 
 
-for i in COVID_df.index:
-    if type(COVID_df.iloc[i].County_Name) == str:
-        lower_county = COVID_df.iloc[i].County_Name.lower()
-        postal_lower = COVID_df.iloc[i]['State_Abrev'].lower()
-        lower_county = lower_county.split(' ')
-        lower_county.append('county')
-        lower_county.append(postal_lower)
-        cong_county = '-'.join(lower_county)
-        COVID_df.at[i, 'Full_County'] = cong_county
-    else:
-        print('The following county name threw an error: ' + str(COVID_df.iloc[i].County_Name))
-        
-counties_series = COVID_df['Full_County']
-counties_series.to_csv('counties_series.csv')
-    
-#COVID_df.to_csv('COVID_df.csv', encoding='utf-8')
+sample_fips = pd.read_csv('../sample_fips.csv')
+sample_fips = sample_fips.FIPS.values
+
+sample_data = dataExtraction(sample_fips)
+sample_data.sort_values('State')
+
+sample_data.to_csv('sample_counties_COVID_data.csv')
